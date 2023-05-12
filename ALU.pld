@@ -1,0 +1,67 @@
+Name     ALU ; 
+PartNo   00 ; 
+Date     10/10/10 ;
+Revision 01 ;
+Designer Engineer ;
+Company  None ;
+Assembly None ; 
+Location  ;
+Device   v750c ;
+
+
+/* Inputs */
+pin [1..4]=[A0..3];
+pin [5..8]=[B0..3];
+pin 9=CyBwi;
+pin 10=S0;
+pin 11=S1;
+pin 13=S2;
+
+/* outputs */
+pin 15 = Cy2;
+pin 14 = Cy3;
+pin 16 = Cy1;
+pin [17..20]=[R0..3];
+pin 21=CyBwo;
+pin 22=OV;
+pin 23=LTE;
+
+/* aritmetic */
+/* B Transform */
+[BT0..3]=[B0..3]$S0;
+
+/* Cy0 to Cy4 generate */
+Cy0=(!CyBwi&S0)#(CyBwi&!S0&S1)#(S0&!S1);
+[Cy1..4]=[Cy0..3]&([A0..3]#[BT0..3])#[A0..3]&[BT0..3];
+
+/* aritmetic result */
+[RA0..3]=[A0..3]$[BT0..3]$[Cy0..3];
+CyBw4=Cy4$S0;
+
+/* logic shift */
+/* number of shift [B0..1] */
+SHn0=!B0&!B1;
+SHn1=B0&!B1;
+SHn2=!B0&B1;
+SHn3=B0&B1;
+
+/* LSL result */
+RLS0=A0&SHn0;
+RLS1=A1&SHn0 # A0&SHn1;
+RLS2=A2&SHn0 # A1&SHn1 # A0&SHn2;
+RLS3=A3&SHn0 # A2&SHn1 # A1&SHn2 # A0&SHn3;
+CyS=A3&SHn1 # A2&SHn2 # A1&SHn3;
+
+/* logic result */
+[RNOR0..3]=![A0..3]&![B0..3];
+
+/* logic and shift result */
+[RSL0..3]=(S0&[RLS0..3])#(!S0&[RNOR0..3]);
+
+/* final result */
+[R0..3]=(S2&[RSL0..3])#(!S2&[RA0..3]);
+
+CyBwo = (CyBw4 & !S2) # (CyS & S2);
+LTE=(!R0&!R1&!R2&!R3)#((!R3&OV)#(R3&!OV));	
+OV=(!A3&!BT3&R3)#(A3&BT3&!R3);
+
